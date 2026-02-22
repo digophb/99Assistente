@@ -1,12 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="#80000000">
+    android:layout_height="match_parent">
+
+    <com.fred.assistente99.CalibrationView
+        android:id="@+id/calibrationView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#80000000" />
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="wrap_content"
         android:orientation="vertical">
 
         <TextView
@@ -15,56 +20,39 @@
             android:layout_height="wrap_content"
             android:padding="16dp"
             android:background="@color/green_700"
-            android:text="Arraste os 3 alvos para as posições onde deseja tocar"
+            android:text="Arraste os 3 alvos (1, 2, 3) para as posições de toque"
             android:textColor="@color/white"
             android:textSize="16sp"
             android:textStyle="bold"
             android:gravity="center" />
 
-        <com.fred.assistente99.DraggableTargetView
-            android:id="@+id/targetView1"
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1" />
+    </LinearLayout>
 
-        <com.fred.assistente99.DraggableTargetView
-            android:id="@+id/targetView2"
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1" />
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:orientation="horizontal"
+        android:padding="8dp"
+        android:background="@color/white">
 
-        <com.fred.assistente99.DraggableTargetView
-            android:id="@+id/targetView3"
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1" />
-
-        <LinearLayout
-            android:layout_width="match_parent"
+        <Button
+            android:id="@+id/btnCancelCalibration"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:padding="8dp"
-            android:background="@color/white">
+            android:layout_weight="1"
+            android:layout_marginEnd="8dp"
+            android:text="Cancelar"
+            android:backgroundTint="@color/gray_dark" />
 
-            <Button
-                android:id="@+id/btnCancelCalibration"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:layout_marginEnd="8dp"
-                android:text="Cancelar"
-                android:backgroundTint="@color/gray_dark" />
-
-            <Button
-                android:id="@+id/btnSaveCalibration"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:layout_marginStart="8dp"
-                android:text="Salvar Posições"
-                android:backgroundTint="@color/green_700" />
-
-        </LinearLayout>
+        <Button
+            android:id="@+id/btnSaveCalibration"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginStart="8dp"
+            android:text="💾 Salvar Posições"
+            android:backgroundTint="@color/green_700" />
 
     </LinearLayout>
 

@@ -68,8 +68,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun carregarConfiguracoes() {
-        etValorMinimoKm.setText(String.format("%.2f", ConfigManager.getValorMinimoKm(this)))
-        etDistanciaMaximaBusca.setText(String.format("%.1f", ConfigManager.getDistanciaMaximaBusca(this)))
+        etValorMinimoKm.setText(String.format("%.2f", ConfigManager.getValorMinimoKm(this)).replace(".", ","))
+        etDistanciaMaximaBusca.setText(String.format("%.1f", ConfigManager.getDistanciaMaximaBusca(this)).replace(".", ","))
         switchAutoAceitar.isChecked = ConfigManager.isAutoAceitar(this)
         switchMostrarIndicador.isChecked = ConfigManager.isMostrarIndicador(this)
         etDuracaoToque.setText(ConfigManager.getDuracaoToque(this).toString())

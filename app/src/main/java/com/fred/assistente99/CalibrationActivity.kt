@@ -8,9 +8,7 @@ import androidx.appcompat.app.AppCompatActivity
 
 class CalibrationActivity : AppCompatActivity() {
 
-    private lateinit var targetView1: DraggableTargetView
-    private lateinit var targetView2: DraggableTargetView
-    private lateinit var targetView3: DraggableTargetView
+    private lateinit var calibrationView: CalibrationView
     private lateinit var tvInstructions: TextView
     private lateinit var btnSave: Button
     private lateinit var btnCancel: Button
@@ -25,16 +23,10 @@ class CalibrationActivity : AppCompatActivity() {
     }
 
     private fun initViews() {
-        targetView1 = findViewById(R.id.targetView1)
-        targetView2 = findViewById(R.id.targetView2)
-        targetView3 = findViewById(R.id.targetView3)
+        calibrationView = findViewById(R.id.calibrationView)
         tvInstructions = findViewById(R.id.tvInstructions)
         btnSave = findViewById(R.id.btnSaveCalibration)
         btnCancel = findViewById(R.id.btnCancelCalibration)
-        
-        targetView1.setTargetNumber(1)
-        targetView2.setTargetNumber(2)
-        targetView3.setTargetNumber(3)
     }
 
     private fun loadSavedPositions() {
@@ -42,9 +34,9 @@ class CalibrationActivity : AppCompatActivity() {
         val screenWidth = displayMetrics.widthPixels
         val screenHeight = displayMetrics.heightPixels
         
-        // Valores padrão no centro inferior da tela
-        val defaultY = (screenHeight * 0.85).toInt()
-        val centerX = screenWidth / 2
+        // Valores padrão
+        val defaultY = (screenHeight * 0.85).toFloat()
+        val centerX = screenWidth / 2f
         
         val x1 = ConfigManager.getAlvo1X(this)
         val y1 = ConfigManager.getAlvo1Y(this)
@@ -53,17 +45,13 @@ class CalibrationActivity : AppCompatActivity() {
         val x3 = ConfigManager.getAlvo3X(this)
         val y3 = ConfigManager.getAlvo3Y(this)
         
-        targetView1.setPosition(
-            if (x1 > 0) x1.toFloat() else (centerX - 20).toFloat(),
-            if (y1 > 0) y1.toFloat() else defaultY.toFloat()
-        )
-        targetView2.setPosition(
-            if (x2 > 0) x2.toFloat() else centerX.toFloat(),
-            if (y2 > 0) y2.toFloat() else (defaultY + 5).toFloat()
-        )
-        targetView3.setPosition(
-            if (x3 > 0) x3.toFloat() else (centerX + 20).toFloat(),
-            if (y3 > 0) y3.toFloat() else (defaultY - 5).toFloat()
+        calibrationView.setPositions(
+            if (x1 > 0) x1.toFloat() else centerX - 30f,
+            if (y1 > 0) y1.toFloat() else defaultY,
+            if (x2 > 0) x2.toFloat() else centerX,
+            if (y2 > 0) y2.toFloat() else defaultY + 10f,
+            if (x3 > 0) x3.toFloat() else centerX + 30f,
+            if (y3 > 0) y3.toFloat() else defaultY - 5f
         )
     }
 
@@ -78,11 +66,13 @@ class CalibrationActivity : AppCompatActivity() {
     }
 
     private fun saveCalibration() {
-        ConfigManager.setAlvo1(this, targetView1.getPositionX().toInt(), targetView1.getPositionY().toInt())
-        ConfigManager.setAlvo2(this, targetView2.getPositionX().toInt(), targetView2.getPositionY().toInt())
-        ConfigManager.setAlvo3(this, targetView3.getPositionX().toInt(), targetView3.getPositionY().toInt())
+        val (t1, t2, t3) = calibrationView.getPositions()
         
-        Toast.makeText(this, " Posições salvas!", Toast.LENGTH_SHORT).show()
+        ConfigManager.setAlvo1(this, t1.first.toInt(), t1.second.toInt())
+        ConfigManager.setAlvo2(this, t2.first.toInt(), t2.second.toInt())
+        ConfigManager.setAlvo3(this, t3.first.toInt(), t3.second.toInt())
+        
+        Toast.makeText(this, "✓ Posições salvas!", Toast.LENGTH_SHORT).show()
         finish()
     }
 }
