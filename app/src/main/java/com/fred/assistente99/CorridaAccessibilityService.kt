@@ -4,21 +4,14 @@ import android.accessibilityservice.AccessibilityService
 import android.accessibilityservice.GestureDescription
 import android.content.Intent
 import android.graphics.Path
-import android.graphics.PixelFormat
 import android.graphics.Rect
-import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
-import android.view.Gravity
-import android.view.LayoutInflater
-import android.view.View
-import android.view.WindowManager
 import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityNodeInfo
-import android.widget.FrameLayout
-import android.widget.ImageView
-import java.util.regex.Pattern
+import kotlin.math.abs
+import kotlin.random.Random
 
 /**
  * Accessibility Service para monitorar e automatizar o 99 Motorista
@@ -29,11 +22,6 @@ class CorridaAccessibilityService : AccessibilityService() {
         private const val TAG = "99Assistente"
         private const val PACKAGE_99 = "com.taxis99"
         
-        // Padrões regex para extrair valores
-        private val VALOR_PATTERN = Pattern.compile("R\\$\\s*([\\d.,]+)", Pattern.CASE_INSENSITIVE)
-        private val VALOR_KM_PATTERN = Pattern.compile("R\\$\\s*([\\d.,]+)\\s*/\\s*km", Pattern.CASE_INSENSITIVE)
-        private val KM_PATTERN = Pattern.compile("([\\d.,]+)\\s*km", Pattern.CASE_INSENSITIVE)
-        
         @Volatile
         var instance: CorridaAccessibilityService? = null
             private set
@@ -42,15 +30,12 @@ class CorridaAccessibilityService : AccessibilityService() {
     private val handler = Handler(Looper.getMainLooper())
     private var ultimaCorridaProcessada: String = ""
     private var tempoUltimaCorrida: Long = 0
-    private var windowManager: WindowManager? = null
-    private var indicadorView: View? = null
+    private var processandoCorrida = false
 
     override fun onServiceConnected() {
         super.onServiceConnected()
         instance = this
         Log.d(TAG, "Accessibility Service conectado")
-        
-        windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
         
         // Iniciar overlay flutuante
         startService(Intent(this, FloatingOverlayService::class.java))
@@ -60,12 +45,17 @@ class CorridaAccessibilityService : AccessibilityService() {
         if (event == null) return
         
         // Verificar se é o app do 99
-        if (event.packageName?.toString() != PACKAGE_99) return
+        val packageName = event.packageName?.toString()
+        if (packageName != PACKAGE_99) return
+        
+        // Log para debug
+        Log.d(TAG, "Evento recebido: type=${event.eventType}, package=$packageName, className=${event.className}")
         
         // Verificar tipo de evento
         when (event.eventType) {
             AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED,
-            AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED -> {
+            AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED,
+            AccessibilityEvent.TYPE_VIEW_TEXT_CHANGED -> {
                 verificarCorridaDisponivel()
             }
         }
@@ -78,15 +68,18 @@ class CorridaAccessibilityService : AccessibilityService() {
     override fun onDestroy() {
         super.onDestroy()
         instance = null
-        removerIndicador()
         stopService(Intent(this, FloatingOverlayService::class.java))
     }
 
     private fun verificarCorridaDisponivel() {
+        if (processandoCorrida) {
+            Log.d(TAG, "Já processando uma corrida, ignorando...")
+            return
+        }
+        
         val rootNode = rootInActiveWindow ?: return
         
         try {
-            // Procurar por elementos que indicam uma corrida disponível
             val infoCorrida = extrairInfoCorrida(rootNode)
             
             if (infoCorrida != null && isNovaCorrida(infoCorrida)) {
@@ -100,7 +93,6 @@ class CorridaAccessibilityService : AccessibilityService() {
     }
 
     private fun extrairInfoCorrida(rootNode: AccessibilityNodeInfo): InfoCorrida? {
-        // Buscar todos os textos na tela
         val textos = mutableListOf<String>()
         buscarTextosRecursivo(rootNode, textos)
         
@@ -112,33 +104,34 @@ class CorridaAccessibilityService : AccessibilityService() {
         var distanciaCorrida: Double? = null
         
         for (texto in textos) {
-            // Extrair valor por km (formato: R$ X,XX/km)
-            val matcherKm = VALOR_KM_PATTERN.matcher(texto)
-            if (matcherKm.find()) {
-                valorPorKm = parseValor(matcherKm.group(1))
+            // Extrair valor por km
+            val kmPattern = Regex("""R\$\s*([\d.,]+)\s*/\s*km""", RegexOption.IGNORE_CASE)
+            kmPattern.find(texto)?.let {
+                valorPorKm = parseValor(it.groupValues[1])
             }
             
-            // Extrair valor total (formato: R$ XX,XX sem /km)
-            val matcherValor = VALOR_PATTERN.matcher(texto)
-            if (matcherValor.find() && !texto.contains("/km", ignoreCase = true)) {
-                valorTotal = parseValor(matcherValor.group(1))
+            // Extrair valor total
+            val valorPattern = Regex("""R\$\s*([\d.,]+)""")
+            if (!texto.contains("/km", ignoreCase = true)) {
+                valorPattern.find(texto)?.let {
+                    val valor = parseValor(it.groupValues[1])
+                    if (valor != null && valor > 0) {
+                        if (valorTotal == null || valor > valorTotal) {
+                            valorTotal = valor
+                        }
+                    }
+                }
             }
             
             // Extrair distâncias
-            val matcherDistancia = KM_PATTERN.matcher(texto)
-            var primeiroKm = true
-            while (matcherDistancia.find()) {
-                val km = parseValor(matcherDistancia.group(1))
-                if (primeiroKm) {
-                    distanciaBusca = km
-                    primeiroKm = false
-                } else {
-                    distanciaCorrida = km
-                }
+            val distPattern = Regex("""([\d.,]+)\s*km""", RegexOption.IGNORE_CASE)
+            val distancias = distPattern.findAll(texto).mapNotNull { parseValor(it.groupValues[1]) }.toList()
+            if (distancias.isNotEmpty()) {
+                distanciaBusca = distancias.getOrNull(0) ?: 0.0
+                distanciaCorrida = distancias.getOrNull(1) ?: distanciaCorrida
             }
         }
         
-        // Se encontrou valor por km, temos uma corrida
         if (valorPorKm != null) {
             return InfoCorrida(
                 valorTotal = valorTotal ?: 0.0,
@@ -191,6 +184,9 @@ class CorridaAccessibilityService : AccessibilityService() {
     }
 
     private fun processarCorrida(info: InfoCorrida) {
+        if (processandoCorrida) return
+        processandoCorrida = true
+        
         Log.d(TAG, "Processando corrida: $info")
         
         val valorMinimo = ConfigManager.getValorMinimoKm(applicationContext)
@@ -208,97 +204,79 @@ class CorridaAccessibilityService : AccessibilityService() {
             ConfigManager.incrementarCorridasAceitas(applicationContext)
             
             if (autoAceitar) {
-                handler.postDelayed({ executarSequenciaToques(aceitar = true) }, 200)
+                executarToquesAceitar()
             }
         } else {
             Log.d(TAG, "REJEITANDO corrida: $mensagem")
             ConfigManager.incrementarCorridasRejeitadas(applicationContext)
-            
-            if (autoAceitar) {
-                handler.postDelayed({ executarSequenciaToques(aceitar = false) }, 200)
-            }
+            // Não faz nada, deixa a corrida expirar
         }
         
         FloatingOverlayService.instance?.atualizarStatus()
     }
 
-    private fun executarSequenciaToques(aceitar: Boolean) {
-        val quantidadeToques = ConfigManager.getQuantidadeToques(applicationContext)
-        val duracaoToque = ConfigManager.getDuracaoToque(applicationContext).toLong()
-        val intervaloToques = ConfigManager.getIntervaloToques(applicationContext).toLong()
+    private fun executarToquesAceitar() {
+        // Verificar se os alvos estão configurados
+        if (!ConfigManager.isAlvosConfigurados(applicationContext)) {
+            Log.e(TAG, "Alvos não configurados!")
+            processandoCorrida = false
+            return
+        }
+        
+        val delayMin = ConfigManager.getDelayInicioMin(applicationContext)
+        val delayMax = ConfigManager.getDelayInicioMax(applicationContext)
+        val duracaoToque = ConfigManager.getDuracaoToque(applicationContext)
+        val intervaloMin = ConfigManager.getIntervaloMin(applicationContext)
+        val intervaloMax = ConfigManager.getIntervaloMax(applicationContext)
         val mostrarIndicador = ConfigManager.isMostrarIndicador(applicationContext)
         
-        val displayMetrics = resources.displayMetrics
-        val screenHeight = displayMetrics.heightPixels
-        val screenWidth = displayMetrics.widthPixels
+        // Sortear delay inicial
+        val delayInicial = Random.nextInt(delayMin, delayMax + 1)
+        Log.d(TAG, "Delay inicial: ${delayInicial}ms")
         
-        // Posição do toque
-        val x = screenWidth / 2f // Centralizado horizontalmente
-        val posicaoYPercent = if (aceitar) {
-            ConfigManager.getPosicaoYToque(applicationContext)
-        } else {
-            90 // Rejeitar fica mais abaixo
-        }
-        val y = screenHeight * (posicaoYPercent / 100f)
-        
-        Log.d(TAG, "Executando $quantidadeToques toques em x=$x, y=$y")
-        
-        // Executar sequência de toques
-        for (i in 0 until quantidadeToques) {
-            val delay = i * (duracaoToque + intervaloToques)
+        handler.postDelayed({
+            // Toque 1 - Alvo 1
+            val x1 = ConfigManager.getAlvo1X(applicationContext).toFloat()
+            val y1 = ConfigManager.getAlvo1Y(applicationContext).toFloat()
+            
+            if (mostrarIndicador) {
+                TouchIndicatorOverlay.show(this, x1, y1, ConfigManager.getTamanhoAreaToque(applicationContext))
+            }
+            realizarToque(x1, y1, duracaoToque.toLong())
+            
+            // Sortear intervalo 1
+            val intervalo1 = Random.nextInt(intervaloMin, intervaloMax + 1)
+            Log.d(TAG, "Toque 1 em ($x1, $y1), intervalo: ${intervalo1}ms")
             
             handler.postDelayed({
+                // Toque 2 - Alvo 2
+                val x2 = ConfigManager.getAlvo2X(applicationContext).toFloat()
+                val y2 = ConfigManager.getAlvo2Y(applicationContext).toFloat()
+                
                 if (mostrarIndicador) {
-                    mostrarIndicadorToque(x, y)
+                    TouchIndicatorOverlay.show(this, x2, y2, ConfigManager.getTamanhoAreaToque(applicationContext))
                 }
-                realizarToque(x, y, duracaoToque)
-            }, delay)
-        }
-    }
-
-    private fun mostrarIndicadorToque(x: Float, y: Float) {
-        removerIndicador()
-        
-        val tamanho = ConfigManager.getTamanhoAreaToque(applicationContext)
-        
-        val params = WindowManager.LayoutParams(
-            tamanho,
-            tamanho,
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) 
-                WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY 
-            else 
-                WindowManager.LayoutParams.TYPE_PHONE,
-            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
-                WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE,
-            PixelFormat.TRANSLUCENT
-        )
-        
-        params.gravity = Gravity.TOP or Gravity.START
-        params.x = (x - tamanho / 2).toInt()
-        params.y = (y - tamanho / 2).toInt()
-        
-        // Criar view do indicador
-        val indicador = ImageView(applicationContext).apply {
-            setBackgroundColor(0x80FF0000.toInt()) // Vermelho translúcido
-            scaleType = ImageView.ScaleType.FIT_CENTER
-        }
-        
-        indicadorView = indicador
-        windowManager?.addView(indicador, params)
-        
-        // Remover após mostrar
-        handler.postDelayed({ removerIndicador() }, 500)
-    }
-
-    private fun removerIndicador() {
-        indicadorView?.let {
-            try {
-                windowManager?.removeView(it)
-            } catch (e: Exception) {
-                Log.e(TAG, "Erro ao remover indicador", e)
-            }
-            indicadorView = null
-        }
+                realizarToque(x2, y2, duracaoToque.toLong())
+                
+                // Sortear intervalo 2
+                val intervalo2 = Random.nextInt(intervaloMin, intervaloMax + 1)
+                Log.d(TAG, "Toque 2 em ($x2, $y2), intervalo: ${intervalo2}ms")
+                
+                handler.postDelayed({
+                    // Toque 3 - Alvo 3
+                    val x3 = ConfigManager.getAlvo3X(applicationContext).toFloat()
+                    val y3 = ConfigManager.getAlvo3Y(applicationContext).toFloat()
+                    
+                    if (mostrarIndicador) {
+                        TouchIndicatorOverlay.show(this, x3, y3, ConfigManager.getTamanhoAreaToque(applicationContext))
+                    }
+                    realizarToque(x3, y3, duracaoToque.toLong())
+                    
+                    Log.d(TAG, "Toque 3 em ($x3, $y3) - Concluído!")
+                    processandoCorrida = false
+                }, intervalo2.toLong())
+            }, intervalo1.toLong())
+        }, delayInicial.toLong())
     }
 
     private fun realizarToque(x: Float, y: Float, duracao: Long) {

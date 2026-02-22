@@ -24,6 +24,12 @@
             </intent-filter>
         </activity>
 
+        <activity
+            android:name=".CalibrationActivity"
+            android:exported="false"
+            android:label="Calibrar Posições"
+            android:theme="@style/Theme.Assistente99" />
+
         <service
             android:name=".CorridaAccessibilityService"
             android:exported="true"

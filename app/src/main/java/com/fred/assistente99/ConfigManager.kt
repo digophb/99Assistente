@@ -10,6 +10,7 @@ object ConfigManager {
     
     private const val PREFS_NAME = "assistente99_prefs"
     
+    // Configurações de corrida
     private const val KEY_VALOR_MINIMO_KM = "valor_minimo_km"
     private const val KEY_DISTANCIA_MAXIMA_BUSCA = "distancia_maxima_busca"
     private const val KEY_AUTO_ACEITAR = "auto_aceitar"
@@ -18,19 +19,30 @@ object ConfigManager {
     private const val KEY_CORRIDAS_REJEITADAS = "corridas_rejeitadas"
     private const val KEY_ULTIMA_CORRIDA = "ultima_corrida"
     
-    // Novas configurações de toque
+    // Configurações de toque
     private const val KEY_QUANTIDADE_TOQUES = "quantidade_toques"
     private const val KEY_DURACAO_TOQUE = "duracao_toque"
-    private const val KEY_INTERVALO_TOQUES = "intervalo_toques"
+    private const val KEY_INTERVALO_MIN = "intervalo_min"
+    private const val KEY_INTERVALO_MAX = "intervalo_max"
+    private const val KEY_DELAY_INICIO_MIN = "delay_inicio_min"
+    private const val KEY_DELAY_INICIO_MAX = "delay_inicio_max"
     private const val KEY_TAMANHO_AREA_TOQUE = "tamanho_area_toque"
     private const val KEY_MOSTRAR_INDICADOR = "mostrar_indicador"
-    private const val KEY_POSICAO_Y_TOQUE = "posicao_y_toque"
+    
+    // Posições dos 3 alvos
+    private const val KEY_ALVO1_X = "alvo1_x"
+    private const val KEY_ALVO1_Y = "alvo1_y"
+    private const val KEY_ALVO2_X = "alvo2_x"
+    private const val KEY_ALVO2_Y = "alvo2_y"
+    private const val KEY_ALVO3_X = "alvo3_x"
+    private const val KEY_ALVO3_Y = "alvo3_y"
     
     private fun getPrefs(context: Context): SharedPreferences {
         return context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
     }
     
-    // Valor mínimo por km
+    // === CONFIGURAÇÕES DE CORRIDA ===
+    
     fun getValorMinimoKm(context: Context): Double {
         return getPrefs(context).getFloat(KEY_VALOR_MINIMO_KM, 2.0f).toDouble()
     }
@@ -39,7 +51,6 @@ object ConfigManager {
         getPrefs(context).edit().putFloat(KEY_VALOR_MINIMO_KM, valor.toFloat()).apply()
     }
     
-    // Distância máxima para buscar passageiro
     fun getDistanciaMaximaBusca(context: Context): Double {
         return getPrefs(context).getFloat(KEY_DISTANCIA_MAXIMA_BUSCA, 10.0f).toDouble()
     }
@@ -48,7 +59,6 @@ object ConfigManager {
         getPrefs(context).edit().putFloat(KEY_DISTANCIA_MAXIMA_BUSCA, valor.toFloat()).apply()
     }
     
-    // Auto aceitar ativado
     fun isAutoAceitar(context: Context): Boolean {
         return getPrefs(context).getBoolean(KEY_AUTO_ACEITAR, true)
     }
@@ -57,7 +67,6 @@ object ConfigManager {
         getPrefs(context).edit().putBoolean(KEY_AUTO_ACEITAR, ativo).apply()
     }
     
-    // Serviço ativo
     fun isServicoAtivo(context: Context): Boolean {
         return getPrefs(context).getBoolean(KEY_SERVICO_ATIVO, false)
     }
@@ -66,7 +75,6 @@ object ConfigManager {
         getPrefs(context).edit().putBoolean(KEY_SERVICO_ATIVO, ativo).apply()
     }
     
-    // Contadores
     fun getCorridasAceitas(context: Context): Int {
         return getPrefs(context).getInt(KEY_CORRIDAS_ACEITAS, 0)
     }
@@ -85,7 +93,6 @@ object ConfigManager {
         getPrefs(context).edit().putInt(KEY_CORRIDAS_REJEITADAS, atual + 1).apply()
     }
     
-    // Última corrida
     fun getUltimaCorrida(context: Context): String {
         return getPrefs(context).getString(KEY_ULTIMA_CORRIDA, "Nenhuma ainda") ?: "Nenhuma ainda"
     }
@@ -94,18 +101,12 @@ object ConfigManager {
         getPrefs(context).edit().putString(KEY_ULTIMA_CORRIDA, info).apply()
     }
     
-    // === NOVAS CONFIGURAÇÕES DE TOQUE ===
+    // === CONFIGURAÇÕES DE TOQUE ===
     
-    // Quantidade de toques
     fun getQuantidadeToques(context: Context): Int {
-        return getPrefs(context).getInt(KEY_QUANTIDADE_TOQUES, 3)
+        return 3 // Fixo em 3 toques
     }
     
-    fun setQuantidadeToques(context: Context, quantidade: Int) {
-        getPrefs(context).edit().putInt(KEY_QUANTIDADE_TOQUES, quantidade).apply()
-    }
-    
-    // Duração de cada toque (ms)
     fun getDuracaoToque(context: Context): Int {
         return getPrefs(context).getInt(KEY_DURACAO_TOQUE, 150)
     }
@@ -114,16 +115,38 @@ object ConfigManager {
         getPrefs(context).edit().putInt(KEY_DURACAO_TOQUE, duracao).apply()
     }
     
-    // Intervalo entre toques (ms)
-    fun getIntervaloToques(context: Context): Int {
-        return getPrefs(context).getInt(KEY_INTERVALO_TOQUES, 100)
+    fun getIntervaloMin(context: Context): Int {
+        return getPrefs(context).getInt(KEY_INTERVALO_MIN, 100)
     }
     
-    fun setIntervaloToques(context: Context, intervalo: Int) {
-        getPrefs(context).edit().putInt(KEY_INTERVALO_TOQUES, intervalo).apply()
+    fun setIntervaloMin(context: Context, valor: Int) {
+        getPrefs(context).edit().putInt(KEY_INTERVALO_MIN, valor).apply()
     }
     
-    // Tamanho da área de toque (pixels de diâmetro)
+    fun getIntervaloMax(context: Context): Int {
+        return getPrefs(context).getInt(KEY_INTERVALO_MAX, 200)
+    }
+    
+    fun setIntervaloMax(context: Context, valor: Int) {
+        getPrefs(context).edit().putInt(KEY_INTERVALO_MAX, valor).apply()
+    }
+    
+    fun getDelayInicioMin(context: Context): Int {
+        return getPrefs(context).getInt(KEY_DELAY_INICIO_MIN, 100)
+    }
+    
+    fun setDelayInicioMin(context: Context, valor: Int) {
+        getPrefs(context).edit().putInt(KEY_DELAY_INICIO_MIN, valor).apply()
+    }
+    
+    fun getDelayInicioMax(context: Context): Int {
+        return getPrefs(context).getInt(KEY_DELAY_INICIO_MAX, 300)
+    }
+    
+    fun setDelayInicioMax(context: Context, valor: Int) {
+        getPrefs(context).edit().putInt(KEY_DELAY_INICIO_MAX, valor).apply()
+    }
+    
     fun getTamanhoAreaToque(context: Context): Int {
         return getPrefs(context).getInt(KEY_TAMANHO_AREA_TOQUE, 100)
     }
@@ -132,7 +155,6 @@ object ConfigManager {
         getPrefs(context).edit().putInt(KEY_TAMANHO_AREA_TOQUE, tamanho).apply()
     }
     
-    // Mostrar indicador visual
     fun isMostrarIndicador(context: Context): Boolean {
         return getPrefs(context).getBoolean(KEY_MOSTRAR_INDICADOR, true)
     }
@@ -141,13 +163,55 @@ object ConfigManager {
         getPrefs(context).edit().putBoolean(KEY_MOSTRAR_INDICADOR, mostrar).apply()
     }
     
-    // Posição Y do toque (porcentagem da altura da tela)
-    fun getPosicaoYToque(context: Context): Int {
-        return getPrefs(context).getInt(KEY_POSICAO_Y_TOQUE, 85)
+    // === POSIÇÕES DOS 3 ALVOS ===
+    
+    fun getAlvo1X(context: Context): Int {
+        return getPrefs(context).getInt(KEY_ALVO1_X, -1)
     }
     
-    fun setPosicaoYToque(context: Context, posicao: Int) {
-        getPrefs(context).edit().putInt(KEY_POSICAO_Y_TOQUE, posicao).apply()
+    fun getAlvo1Y(context: Context): Int {
+        return getPrefs(context).getInt(KEY_ALVO1_Y, -1)
+    }
+    
+    fun setAlvo1(context: Context, x: Int, y: Int) {
+        getPrefs(context).edit()
+            .putInt(KEY_ALVO1_X, x)
+            .putInt(KEY_ALVO1_Y, y)
+            .apply()
+    }
+    
+    fun getAlvo2X(context: Context): Int {
+        return getPrefs(context).getInt(KEY_ALVO2_X, -1)
+    }
+    
+    fun getAlvo2Y(context: Context): Int {
+        return getPrefs(context).getInt(KEY_ALVO2_Y, -1)
+    }
+    
+    fun setAlvo2(context: Context, x: Int, y: Int) {
+        getPrefs(context).edit()
+            .putInt(KEY_ALVO2_X, x)
+            .putInt(KEY_ALVO2_Y, y)
+            .apply()
+    }
+    
+    fun getAlvo3X(context: Context): Int {
+        return getPrefs(context).getInt(KEY_ALVO3_X, -1)
+    }
+    
+    fun getAlvo3Y(context: Context): Int {
+        return getPrefs(context).getInt(KEY_ALVO3_Y, -1)
+    }
+    
+    fun setAlvo3(context: Context, x: Int, y: Int) {
+        getPrefs(context).edit()
+            .putInt(KEY_ALVO3_X, x)
+            .putInt(KEY_ALVO3_Y, y)
+            .apply()
+    }
+    
+    fun isAlvosConfigurados(context: Context): Boolean {
+        return getAlvo1X(context) > 0 && getAlvo2X(context) > 0 && getAlvo3X(context) > 0
     }
     
     // Reset estatísticas

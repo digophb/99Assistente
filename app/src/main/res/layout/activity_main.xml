@@ -38,7 +38,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
-                    android:text="@string/assistente_inativo"
+                    android:text="Assistente Inativo"
                     android:textSize="16sp"
                     android:textColor="@color/red_500" />
 
@@ -47,7 +47,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="12dp"
-                    android:text="@string/btn_ativar_servico"
+                    android:text="Ativar Assistente"
                     android:backgroundTint="@color/green_700" />
 
             </LinearLayout>
@@ -76,12 +76,11 @@
                     android:textStyle="bold"
                     android:textColor="@color/black" />
 
-                <!-- Valor mínimo por Km -->
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
-                    android:text="@string/valor_minimo_km_label"
+                    android:text="Valor mínimo por Km (R$)"
                     android:textSize="14sp"
                     android:textColor="@color/gray_dark" />
 
@@ -93,12 +92,11 @@
                     android:text="2.00"
                     android:textSize="16sp" />
 
-                <!-- Distância máxima para busca -->
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="12dp"
-                    android:text="@string/distancia_maxima_busca_label"
+                    android:text="Distância máxima para buscar (Km)"
                     android:textSize="14sp"
                     android:textColor="@color/gray_dark" />
 
@@ -110,7 +108,6 @@
                     android:text="10.0"
                     android:textSize="16sp" />
 
-                <!-- Switch para ativar/desativar -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -160,37 +157,28 @@
                     android:textStyle="bold"
                     android:textColor="@color/black" />
 
-                <TextView
-                    android:layout_width="wrap_content"
+                <Button
+                    android:id="@+id/btnCalibrar"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:text="Ajuste como o app simula os toques"
-                    android:textSize="12sp"
-                    android:textColor="@color/gray_dark" />
+                    android:layout_marginTop="12dp"
+                    android:text="🔧 Calibrar Posições de Toque"
+                    android:backgroundTint="@color/purple_500" />
 
-                <!-- Quantidade de toques -->
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
-                    android:text="Quantidade de toques"
+                    android:text="Quantidade de toques: 3 (fixo)"
                     android:textSize="14sp"
-                    android:textColor="@color/gray_dark" />
+                    android:textColor="@color/gray_dark"
+                    android:textStyle="italic" />
 
-                <EditText
-                    android:id="@+id/etQuantidadeToques"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:inputType="number"
-                    android:text="3"
-                    android:textSize="16sp" />
-
-                <!-- Duração do toque -->
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
-                    android:text="Duração de cada toque (ms)"
+                    android:layout_marginTop="16dp"
+                    android:text="Duração do toque (ms)"
                     android:textSize="14sp"
                     android:textColor="@color/gray_dark" />
 
@@ -202,29 +190,123 @@
                     android:text="150"
                     android:textSize="16sp" />
 
-                <!-- Intervalo entre toques -->
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
-                    android:text="Intervalo entre toques (ms)"
-                    android:textSize="14sp"
-                    android:textColor="@color/gray_dark" />
-
-                <EditText
-                    android:id="@+id/etIntervaloToques"
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:inputType="number"
-                    android:text="100"
-                    android:textSize="16sp" />
+                    android:layout_marginTop="12dp"
+                    android:orientation="horizontal">
 
-                <!-- Tamanho da área de toque -->
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical"
+                        android:layout_marginEnd="8dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Intervalo mín. (ms)"
+                            android:textSize="12sp"
+                            android:textColor="@color/gray_dark" />
+
+                        <EditText
+                            android:id="@+id/etIntervaloMin"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="number"
+                            android:text="100"
+                            android:textSize="16sp" />
+
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical"
+                        android:layout_marginStart="8dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Intervalo máx. (ms)"
+                            android:textSize="12sp"
+                            android:textColor="@color/gray_dark" />
+
+                        <EditText
+                            android:id="@+id/etIntervaloMax"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="number"
+                            android:text="200"
+                            android:textSize="16sp" />
+
+                    </LinearLayout>
+
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:orientation="horizontal">
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical"
+                        android:layout_marginEnd="8dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Delay início mín. (ms)"
+                            android:textSize="12sp"
+                            android:textColor="@color/gray_dark" />
+
+                        <EditText
+                            android:id="@+id/etDelayInicioMin"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="number"
+                            android:text="100"
+                            android:textSize="16sp" />
+
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical"
+                        android:layout_marginStart="8dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Delay início máx. (ms)"
+                            android:textSize="12sp"
+                            android:textColor="@color/gray_dark" />
+
+                        <EditText
+                            android:id="@+id/etDelayInicioMax"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="number"
+                            android:text="300"
+                            android:textSize="16sp" />
+
+                    </LinearLayout>
+
+                </LinearLayout>
+
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="12dp"
-                    android:text="Tamanho da área de toque (pixels)"
+                    android:text="Tamanho da área de toque (px)"
                     android:textSize="14sp"
                     android:textColor="@color/gray_dark" />
 
@@ -236,24 +318,6 @@
                     android:text="100"
                     android:textSize="16sp" />
 
-                <!-- Posição Y do toque -->
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
-                    android:text="Posição vertical do toque (% da altura)"
-                    android:textSize="14sp"
-                    android:textColor="@color/gray_dark" />
-
-                <EditText
-                    android:id="@+id/etPosicaoY"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:inputType="number"
-                    android:text="85"
-                    android:textSize="16sp" />
-
-                <!-- Mostrar indicador visual -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -287,10 +351,11 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="16dp"
-            android:text="Salvar Todas as Configurações"
+            android:text="💾 Salvar Todas as Configurações"
+            android:textSize="16sp"
             android:backgroundTint="@color/orange_500" />
 
-        <!-- Estatísticas Card -->
+        <!-- Estatísticas -->
         <androidx.cardview.widget.CardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -336,7 +401,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="@string/corridas_aceitas"
+                            android:text="Aceitas"
                             android:textSize="12sp"
                             android:textColor="@color/gray_dark" />
 
@@ -361,7 +426,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="@string/corridas_rejeitadas"
+                            android:text="Rejeitadas"
                             android:textSize="12sp"
                             android:textColor="@color/gray_dark" />
 
@@ -378,7 +443,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="@string/ultima_corrida"
+                        android:text="Última Corrida"
                         android:textSize="14sp"
                         android:textColor="@color/gray_dark" />
 
@@ -387,7 +452,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="4dp"
-                        android:text="@string/nenhuma_corrida"
+                        android:text="Nenhuma ainda"
                         android:textSize="14sp"
                         android:textColor="@color/black" />
 
