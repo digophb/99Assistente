@@ -18,6 +18,14 @@ object ConfigManager {
     private const val KEY_CORRIDAS_REJEITADAS = "corridas_rejeitadas"
     private const val KEY_ULTIMA_CORRIDA = "ultima_corrida"
     
+    // Novas configurações de toque
+    private const val KEY_QUANTIDADE_TOQUES = "quantidade_toques"
+    private const val KEY_DURACAO_TOQUE = "duracao_toque"
+    private const val KEY_INTERVALO_TOQUES = "intervalo_toques"
+    private const val KEY_TAMANHO_AREA_TOQUE = "tamanho_area_toque"
+    private const val KEY_MOSTRAR_INDICADOR = "mostrar_indicador"
+    private const val KEY_POSICAO_Y_TOQUE = "posicao_y_toque"
+    
     private fun getPrefs(context: Context): SharedPreferences {
         return context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
     }
@@ -84,6 +92,62 @@ object ConfigManager {
     
     fun setUltimaCorrida(context: Context, info: String) {
         getPrefs(context).edit().putString(KEY_ULTIMA_CORRIDA, info).apply()
+    }
+    
+    // === NOVAS CONFIGURAÇÕES DE TOQUE ===
+    
+    // Quantidade de toques
+    fun getQuantidadeToques(context: Context): Int {
+        return getPrefs(context).getInt(KEY_QUANTIDADE_TOQUES, 3)
+    }
+    
+    fun setQuantidadeToques(context: Context, quantidade: Int) {
+        getPrefs(context).edit().putInt(KEY_QUANTIDADE_TOQUES, quantidade).apply()
+    }
+    
+    // Duração de cada toque (ms)
+    fun getDuracaoToque(context: Context): Int {
+        return getPrefs(context).getInt(KEY_DURACAO_TOQUE, 150)
+    }
+    
+    fun setDuracaoToque(context: Context, duracao: Int) {
+        getPrefs(context).edit().putInt(KEY_DURACAO_TOQUE, duracao).apply()
+    }
+    
+    // Intervalo entre toques (ms)
+    fun getIntervaloToques(context: Context): Int {
+        return getPrefs(context).getInt(KEY_INTERVALO_TOQUES, 100)
+    }
+    
+    fun setIntervaloToques(context: Context, intervalo: Int) {
+        getPrefs(context).edit().putInt(KEY_INTERVALO_TOQUES, intervalo).apply()
+    }
+    
+    // Tamanho da área de toque (pixels de diâmetro)
+    fun getTamanhoAreaToque(context: Context): Int {
+        return getPrefs(context).getInt(KEY_TAMANHO_AREA_TOQUE, 100)
+    }
+    
+    fun setTamanhoAreaToque(context: Context, tamanho: Int) {
+        getPrefs(context).edit().putInt(KEY_TAMANHO_AREA_TOQUE, tamanho).apply()
+    }
+    
+    // Mostrar indicador visual
+    fun isMostrarIndicador(context: Context): Boolean {
+        return getPrefs(context).getBoolean(KEY_MOSTRAR_INDICADOR, true)
+    }
+    
+    fun setMostrarIndicador(context: Context, mostrar: Boolean) {
+        getPrefs(context).edit().putBoolean(KEY_MOSTRAR_INDICADOR, mostrar).apply()
+    }
+    
+    // Posição Y do toque (porcentagem da altura da tela)
+    fun getPosicaoYToque(context: Context): Int {
+        return getPrefs(context).getInt(KEY_POSICAO_Y_TOQUE, 85)
+    }
+    
+    fun setPosicaoYToque(context: Context, posicao: Int) {
+        getPrefs(context).edit().putInt(KEY_POSICAO_Y_TOQUE, posicao).apply()
     }
     
     // Reset estatísticas

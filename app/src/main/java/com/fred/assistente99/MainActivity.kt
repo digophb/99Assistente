@@ -2,7 +2,6 @@ package com.fred.assistente99
 
 import android.content.Intent
 import android.net.Uri
-import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
 import android.widget.Button
@@ -16,13 +15,23 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var tvStatus: TextView
     private lateinit var btnToggleServico: Button
-    private lateinit var etValorMinimoKm: EditText
-    private lateinit var etDistanciaMaximaBusca: EditText
-    private lateinit var switchAutoAceitar: Switch
     private lateinit var btnSalvarConfig: Button
     private lateinit var tvAceitas: TextView
     private lateinit var tvRejeitadas: TextView
     private lateinit var tvUltimaCorrida: TextView
+    
+    // Configurações de corrida
+    private lateinit var etValorMinimoKm: EditText
+    private lateinit var etDistanciaMaximaBusca: EditText
+    private lateinit var switchAutoAceitar: Switch
+    
+    // Configurações de toque
+    private lateinit var etQuantidadeToques: EditText
+    private lateinit var etDuracaoToque: EditText
+    private lateinit var etIntervaloToques: EditText
+    private lateinit var etTamanhoArea: EditText
+    private lateinit var etPosicaoY: EditText
+    private lateinit var switchMostrarIndicador: Switch
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -42,19 +51,38 @@ class MainActivity : AppCompatActivity() {
     private fun initViews() {
         tvStatus = findViewById(R.id.tvStatus)
         btnToggleServico = findViewById(R.id.btnToggleServico)
-        etValorMinimoKm = findViewById(R.id.etValorMinimoKm)
-        etDistanciaMaximaBusca = findViewById(R.id.etDistanciaMaximaBusca)
-        switchAutoAceitar = findViewById(R.id.switchAutoAceitar)
         btnSalvarConfig = findViewById(R.id.btnSalvarConfig)
         tvAceitas = findViewById(R.id.tvAceitas)
         tvRejeitadas = findViewById(R.id.tvRejeitadas)
         tvUltimaCorrida = findViewById(R.id.tvUltimaCorrida)
+        
+        // Configurações de corrida
+        etValorMinimoKm = findViewById(R.id.etValorMinimoKm)
+        etDistanciaMaximaBusca = findViewById(R.id.etDistanciaMaximaBusca)
+        switchAutoAceitar = findViewById(R.id.switchAutoAceitar)
+        
+        // Configurações de toque
+        etQuantidadeToques = findViewById(R.id.etQuantidadeToques)
+        etDuracaoToque = findViewById(R.id.etDuracaoToque)
+        etIntervaloToques = findViewById(R.id.etIntervaloToques)
+        etTamanhoArea = findViewById(R.id.etTamanhoArea)
+        etPosicaoY = findViewById(R.id.etPosicaoY)
+        switchMostrarIndicador = findViewById(R.id.switchMostrarIndicador)
     }
 
     private fun carregarConfiguracoes() {
+        // Configurações de corrida
         etValorMinimoKm.setText(String.format("%.2f", ConfigManager.getValorMinimoKm(this)))
         etDistanciaMaximaBusca.setText(String.format("%.1f", ConfigManager.getDistanciaMaximaBusca(this)))
         switchAutoAceitar.isChecked = ConfigManager.isAutoAceitar(this)
+        
+        // Configurações de toque
+        etQuantidadeToques.setText(ConfigManager.getQuantidadeToques(this).toString())
+        etDuracaoToque.setText(ConfigManager.getDuracaoToque(this).toString())
+        etIntervaloToques.setText(ConfigManager.getIntervaloToques(this).toString())
+        etTamanhoArea.setText(ConfigManager.getTamanhoAreaToque(this).toString())
+        etPosicaoY.setText(ConfigManager.getPosicaoYToque(this).toString())
+        switchMostrarIndicador.isChecked = ConfigManager.isMostrarIndicador(this)
     }
 
     private fun setupListeners() {
@@ -73,7 +101,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun ativarServico() {
         // Verificar permissão de overlay
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.canDrawOverlays(this)) {
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M && !Settings.canDrawOverlays(this)) {
             val intent = Intent(
                 Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
                 Uri.parse("package:$packageName")
@@ -103,6 +131,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun salvarConfiguracoes() {
         try {
+            // Configurações de corrida
             val valorMinimo = etValorMinimoKm.text.toString().replace(",", ".").toDouble()
             val distanciaMaxima = etDistanciaMaximaBusca.text.toString().replace(",", ".").toDouble()
             
@@ -110,9 +139,23 @@ class MainActivity : AppCompatActivity() {
             ConfigManager.setDistanciaMaximaBusca(this, distanciaMaxima)
             ConfigManager.setAutoAceitar(this, switchAutoAceitar.isChecked)
             
+            // Configurações de toque
+            val quantidadeToques = etQuantidadeToques.text.toString().toIntOrNull() ?: 3
+            val duracaoToque = etDuracaoToque.text.toString().toIntOrNull() ?: 150
+            val intervaloToques = etIntervaloToques.text.toString().toIntOrNull() ?: 100
+            val tamanhoArea = etTamanhoArea.text.toString().toIntOrNull() ?: 100
+            val posicaoY = etPosicaoY.text.toString().toIntOrNull() ?: 85
+            
+            ConfigManager.setQuantidadeToques(this, quantidadeToques)
+            ConfigManager.setDuracaoToque(this, duracaoToque)
+            ConfigManager.setIntervaloToques(this, intervaloToques)
+            ConfigManager.setTamanhoAreaToque(this, tamanhoArea)
+            ConfigManager.setPosicaoYToque(this, posicaoY)
+            ConfigManager.setMostrarIndicador(this, switchMostrarIndicador.isChecked)
+            
             Toast.makeText(this, "Configurações salvas!", Toast.LENGTH_SHORT).show()
         } catch (e: Exception) {
-            Toast.makeText(this, "Erro ao salvar configurações", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Erro ao salvar configurações: ${e.message}", Toast.LENGTH_SHORT).show()
         }
     }
 

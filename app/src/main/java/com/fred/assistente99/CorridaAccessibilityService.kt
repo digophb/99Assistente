@@ -4,12 +4,20 @@ import android.accessibilityservice.AccessibilityService
 import android.accessibilityservice.GestureDescription
 import android.content.Intent
 import android.graphics.Path
+import android.graphics.PixelFormat
 import android.graphics.Rect
+import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
+import android.view.Gravity
+import android.view.LayoutInflater
+import android.view.View
+import android.view.WindowManager
 import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityNodeInfo
+import android.widget.FrameLayout
+import android.widget.ImageView
 import java.util.regex.Pattern
 
 /**
@@ -34,11 +42,15 @@ class CorridaAccessibilityService : AccessibilityService() {
     private val handler = Handler(Looper.getMainLooper())
     private var ultimaCorridaProcessada: String = ""
     private var tempoUltimaCorrida: Long = 0
+    private var windowManager: WindowManager? = null
+    private var indicadorView: View? = null
 
     override fun onServiceConnected() {
         super.onServiceConnected()
         instance = this
         Log.d(TAG, "Accessibility Service conectado")
+        
+        windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
         
         // Iniciar overlay flutuante
         startService(Intent(this, FloatingOverlayService::class.java))
@@ -66,6 +78,7 @@ class CorridaAccessibilityService : AccessibilityService() {
     override fun onDestroy() {
         super.onDestroy()
         instance = null
+        removerIndicador()
         stopService(Intent(this, FloatingOverlayService::class.java))
     }
 
@@ -87,19 +100,16 @@ class CorridaAccessibilityService : AccessibilityService() {
     }
 
     private fun extrairInfoCorrida(rootNode: AccessibilityNodeInfo): InfoCorrida? {
-        // Procurar por textos que contenham valores em R$
-        val nodesComTexto = rootNode.findAccessibilityNodeInfosByViewId("android:id/content")
-        
-        var valorTotal: Double? = null
-        var valorPorKm: Double? = null
-        var distanciaBusca: Double? = null
-        var distanciaCorrida: Double? = null
-        
         // Buscar todos os textos na tela
         val textos = mutableListOf<String>()
         buscarTextosRecursivo(rootNode, textos)
         
         Log.d(TAG, "Textos encontrados: $textos")
+        
+        var valorTotal: Double? = null
+        var valorPorKm: Double? = null
+        var distanciaBusca: Double? = null
+        var distanciaCorrida: Double? = null
         
         for (texto in textos) {
             // Extrair valor por km (formato: R$ X,XX/km)
@@ -120,10 +130,10 @@ class CorridaAccessibilityService : AccessibilityService() {
             while (matcherDistancia.find()) {
                 val km = parseValor(matcherDistancia.group(1))
                 if (primeiroKm) {
-                    distanciaBusca = km // Primeiro km geralmente é até o passageiro
+                    distanciaBusca = km
                     primeiroKm = false
                 } else {
-                    distanciaCorrida = km // Segundo km é a distância da corrida
+                    distanciaCorrida = km
                 }
             }
         }
@@ -160,7 +170,6 @@ class CorridaAccessibilityService : AccessibilityService() {
     private fun parseValor(valorStr: String?): Double? {
         if (valorStr.isNullOrBlank()) return null
         return try {
-            // Converter formato brasileiro (1.234,56) para double
             val limpo = valorStr.replace(".", "").replace(",", ".").trim()
             limpo.toDouble()
         } catch (e: Exception) {
@@ -172,7 +181,6 @@ class CorridaAccessibilityService : AccessibilityService() {
         val agora = System.currentTimeMillis()
         val identificador = "${info.valorPorKm}_${info.distanciaCorrida}"
         
-        // Evitar processar a mesma corrida múltiplas vezes (dentro de 5 segundos)
         if (identificador == ultimaCorridaProcessada && (agora - tempoUltimaCorrida) < 5000) {
             return false
         }
@@ -200,63 +208,109 @@ class CorridaAccessibilityService : AccessibilityService() {
             ConfigManager.incrementarCorridasAceitas(applicationContext)
             
             if (autoAceitar) {
-                // Aceitar com pequeno delay para garantir que a tela está pronta
-                handler.postDelayed({ clicarAceitar() }, 200)
+                handler.postDelayed({ executarSequenciaToques(aceitar = true) }, 200)
             }
         } else {
             Log.d(TAG, "REJEITANDO corrida: $mensagem")
             ConfigManager.incrementarCorridasRejeitadas(applicationContext)
             
             if (autoAceitar) {
-                // Rejeitar com pequeno delay
-                handler.postDelayed({ clicarRejeitar() }, 200)
+                handler.postDelayed({ executarSequenciaToques(aceitar = false) }, 200)
             }
         }
         
-        // Atualizar UI se a MainActivity estiver visível
         FloatingOverlayService.instance?.atualizarStatus()
     }
 
-    private fun clicarAceitar() {
-        // Obter dimensões da tela
+    private fun executarSequenciaToques(aceitar: Boolean) {
+        val quantidadeToques = ConfigManager.getQuantidadeToques(applicationContext)
+        val duracaoToque = ConfigManager.getDuracaoToque(applicationContext).toLong()
+        val intervaloToques = ConfigManager.getIntervaloToques(applicationContext).toLong()
+        val mostrarIndicador = ConfigManager.isMostrarIndicador(applicationContext)
+        
         val displayMetrics = resources.displayMetrics
         val screenHeight = displayMetrics.heightPixels
         val screenWidth = displayMetrics.widthPixels
         
-        // A barra verde está aproximadamente no centro horizontal
-        // e na parte inferior da tela (onde fica o botão aceitar)
-        val x = screenWidth / 2f
-        val y = screenHeight * 0.75f // Aproximadamente 75% da altura da tela
+        // Posição do toque
+        val x = screenWidth / 2f // Centralizado horizontalmente
+        val posicaoYPercent = if (aceitar) {
+            ConfigManager.getPosicaoYToque(applicationContext)
+        } else {
+            90 // Rejeitar fica mais abaixo
+        }
+        val y = screenHeight * (posicaoYPercent / 100f)
         
-        Log.d(TAG, "Clicando em ACEITAR: x=$x, y=$y")
-        realizarToque(x, y)
+        Log.d(TAG, "Executando $quantidadeToques toques em x=$x, y=$y")
+        
+        // Executar sequência de toques
+        for (i in 0 until quantidadeToques) {
+            val delay = i * (duracaoToque + intervaloToques)
+            
+            handler.postDelayed({
+                if (mostrarIndicador) {
+                    mostrarIndicadorToque(x, y)
+                }
+                realizarToque(x, y, duracaoToque)
+            }, delay)
+        }
     }
 
-    private fun clicarRejeitar() {
-        // Obter dimensões da tela
-        val displayMetrics = resources.displayMetrics
-        val screenHeight = displayMetrics.heightPixels
-        val screenWidth = displayMetrics.widthPixels
+    private fun mostrarIndicadorToque(x: Float, y: Float) {
+        removerIndicador()
         
-        // Botão de rejeitar está geralmente na parte inferior esquerda
-        val x = screenWidth * 0.25f
-        val y = screenHeight * 0.85f
+        val tamanho = ConfigManager.getTamanhoAreaToque(applicationContext)
         
-        Log.d(TAG, "Clicando em REJEITAR: x=$x, y=$y")
-        realizarToque(x, y)
+        val params = WindowManager.LayoutParams(
+            tamanho,
+            tamanho,
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) 
+                WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY 
+            else 
+                WindowManager.LayoutParams.TYPE_PHONE,
+            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
+                WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE,
+            PixelFormat.TRANSLUCENT
+        )
+        
+        params.gravity = Gravity.TOP or Gravity.START
+        params.x = (x - tamanho / 2).toInt()
+        params.y = (y - tamanho / 2).toInt()
+        
+        // Criar view do indicador
+        val indicador = ImageView(applicationContext).apply {
+            setBackgroundColor(0x80FF0000.toInt()) // Vermelho translúcido
+            scaleType = ImageView.ScaleType.FIT_CENTER
+        }
+        
+        indicadorView = indicador
+        windowManager?.addView(indicador, params)
+        
+        // Remover após mostrar
+        handler.postDelayed({ removerIndicador() }, 500)
     }
 
-    private fun realizarToque(x: Float, y: Float) {
+    private fun removerIndicador() {
+        indicadorView?.let {
+            try {
+                windowManager?.removeView(it)
+            } catch (e: Exception) {
+                Log.e(TAG, "Erro ao remover indicador", e)
+            }
+            indicadorView = null
+        }
+    }
+
+    private fun realizarToque(x: Float, y: Float, duracao: Long) {
         val path = Path()
         path.moveTo(x, y)
         
         val gestureBuilder = GestureDescription.Builder()
-            .addStroke(GestureDescription.StrokeDescription(path, 0, 100))
+            .addStroke(GestureDescription.StrokeDescription(path, 0, duracao))
         
         dispatchGesture(gestureBuilder.build(), null, null)
     }
 
-    // Classe de dados para informações da corrida
     data class InfoCorrida(
         val valorTotal: Double,
         val valorPorKm: Double,
