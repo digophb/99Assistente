@@ -116,7 +116,7 @@ class CorridaAccessibilityService : AccessibilityService() {
                 valorPattern.find(texto)?.let {
                     val valor = parseValor(it.groupValues[1])
                     if (valor != null && valor > 0) {
-                        if (valorTotal == null || valor > valorTotal) {
+                        if (valorTotal == null || valor > valorTotal!!) {
                             valorTotal = valor
                         }
                     }
@@ -132,10 +132,11 @@ class CorridaAccessibilityService : AccessibilityService() {
             }
         }
         
-        if (valorPorKm != null) {
+        val valorPorKmFinal = valorPorKm
+        if (valorPorKmFinal != null) {
             return InfoCorrida(
                 valorTotal = valorTotal ?: 0.0,
-                valorPorKm = valorPorKm,
+                valorPorKm = valorPorKmFinal,
                 distanciaBusca = distanciaBusca ?: 0.0,
                 distanciaCorrida = distanciaCorrida ?: 0.0,
                 textoCompleto = textos.joinToString(" | ")
