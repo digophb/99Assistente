@@ -81,16 +81,16 @@ class CalibrationView @JvmOverloads constructor(
         super.onSizeChanged(w, h, oldw, oldh)
         
         if (!initialized) {
-            // Posição padrão: centro inferior da tela
-            val defaultY = h * 0.85f
+            // Posição padrão: centro da tela
+            val centerY = h / 2f
             val centerX = w / 2f
             
-            targets[0].x = centerX - 30f
-            targets[0].y = defaultY
+            targets[0].x = centerX - 40f
+            targets[0].y = centerY
             targets[1].x = centerX
-            targets[1].y = defaultY + 10f
-            targets[2].x = centerX + 30f
-            targets[2].y = defaultY - 5f
+            targets[1].y = centerY + 10f
+            targets[2].x = centerX + 40f
+            targets[2].y = centerY - 5f
             
             initialized = true
         }

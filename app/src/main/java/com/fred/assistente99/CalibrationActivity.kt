@@ -34,8 +34,8 @@ class CalibrationActivity : AppCompatActivity() {
         val screenWidth = displayMetrics.widthPixels
         val screenHeight = displayMetrics.heightPixels
         
-        // Valores padrão
-        val defaultY = (screenHeight * 0.85).toFloat()
+        // Valores padrão: centro da tela
+        val centerY = screenHeight / 2f
         val centerX = screenWidth / 2f
         
         val x1 = ConfigManager.getAlvo1X(this)
@@ -46,12 +46,12 @@ class CalibrationActivity : AppCompatActivity() {
         val y3 = ConfigManager.getAlvo3Y(this)
         
         calibrationView.setPositions(
-            if (x1 > 0) x1.toFloat() else centerX - 30f,
-            if (y1 > 0) y1.toFloat() else defaultY,
+            if (x1 > 0) x1.toFloat() else centerX - 40f,
+            if (y1 > 0) y1.toFloat() else centerY,
             if (x2 > 0) x2.toFloat() else centerX,
-            if (y2 > 0) y2.toFloat() else defaultY + 10f,
-            if (x3 > 0) x3.toFloat() else centerX + 30f,
-            if (y3 > 0) y3.toFloat() else defaultY - 5f
+            if (y2 > 0) y2.toFloat() else centerY + 10f,
+            if (x3 > 0) x3.toFloat() else centerX + 40f,
+            if (y3 > 0) y3.toFloat() else centerY - 5f
         )
     }
 
